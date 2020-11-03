@@ -9,3 +9,10 @@ Now we can run `http-server app` and browse to http://localhost:8080 to run it
 
 Then I added in a very simple and probably buggy authentication dialog and persistence, to be able to demonstrate the Firebase permissions.
 
+## Firebase integration
+
+- See: https://firebase.google.com/docs/web/setup
+- Use the CDN method
+
+
+

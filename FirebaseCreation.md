@@ -6,7 +6,7 @@
 
 - the Firebase default password complexity is simply 6 characters, a real app would need to enforce a better scheme
 
-- it is possible to script all of this (full devops capability)
+- it is possible to script all of this (full Devops capability)
 
 - authentication information is saved in Google cloud
 
