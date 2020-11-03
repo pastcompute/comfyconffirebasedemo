@@ -19,5 +19,9 @@ Then I added in a very simple and probably buggy authentication dialog and persi
 - See: https://firebase.google.com/docs/auth/web/firebaseui
 -
 
+## Security Notes
 
+- this is a quick mocked up app, the purpose is to demonstrate firebase database permissions
+- a real app would have significant additional function including structural design paying attention to security
+- as always the rule 'validate in the backend should be adhered to, because anyone could manipulate the Javascript code on the front end and avoid any mitigations we attempted to add there, anyway!
 
