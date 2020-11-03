@@ -14,5 +14,10 @@ Then I added in a very simple and probably buggy authentication dialog and persi
 - See: https://firebase.google.com/docs/web/setup
 - Use the CDN method
 
+## Firebase Authentication Integration
+
+- See: https://firebase.google.com/docs/auth/web/firebaseui
+-
+
 
 
