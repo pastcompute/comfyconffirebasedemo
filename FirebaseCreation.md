@@ -86,3 +86,88 @@ const firebaseConfig = {
   messagingSenderId: "839275086164",
   appId: "1:839275086164:web:29854dcb3fd6c1d169c8c1"
 };
+
+## Database Rules
+
+Default these days
+```
+{
+  "rules": {
+    ".read": "now < 1606829400000",  // 2020-12-2
+    ".write": "now < 1606829400000",  // 2020-12-2
+  }
+}
+```
+
+Developers turned it off for testing
+```
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
+Allow auth only to our data
+```
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "userdata": {
+      ".read": "auth != null"
+    },
+  }
+}
+```
+
+Guess the label. and allow only user to write itself:
+```
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "userdata": {
+      ".read": true,
+      "$user_id": {
+        ".write": "$user_id == auth.uid"
+      }
+    },
+  }
+}
+```
+
+Allow individual users to only see & edit themselves
+But other users can see a user once the find the uid from other means than scanning the database
+(May be needed when sharing things, but a better mechanism is use a different database structure)
+```
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "userdata": {
+      "$user_id": {
+        ".read": true,
+        ".write": "$user_id == auth.uid"
+      }
+    },
+  }
+}
+```
+
+Allow self totally only
+```
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "userdata": {
+      "$user_id": {
+        ".read": "auth != null && $user_id == auth.uid"
+        ".write": "auth != null && $user_id == auth.uid"
+      }
+    },
+  }
+}
+```
