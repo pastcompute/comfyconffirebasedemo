@@ -2,6 +2,8 @@
 (function (window) {
 	'use strict';
 
+	var theStorage;
+
 	/**
 	 * Creates a new client side storage object and will create an empty
 	 * collection if no collection already exists.
@@ -9,19 +11,21 @@
 	 * @param {string} name The name of our DB we want to use
 	 * @param {function} callback Our fake DB uses callbacks because in
 	 * real life you probably would be making AJAX calls
+	 * @param {object} storageImpl Storage implementation, defaults to HTML5 window.localStorage
 	 */
-	function Store(name, callback) {
+	function Store(name, callback, storageImpl) {
 		callback = callback || function () {};
+		theStorage = storageImpl || window.localStorage;
 
 		this._dbName = name;
 
-		if (!localStorage.getItem(name)) {
+		if (!theStorage.getItem(name)) {
 			var todos = [];
 
-			localStorage.setItem(name, JSON.stringify(todos));
+			theStorage.setItem(name, JSON.stringify(todos));
 		}
 
-		callback.call(this, JSON.parse(localStorage.getItem(name)));
+		callback.call(this, JSON.parse(theStorage.getItem(name)));
 	}
 
 	/**
@@ -42,7 +46,7 @@
 			return;
 		}
 
-		var todos = JSON.parse(localStorage.getItem(this._dbName));
+		var todos = JSON.parse(theStorage.getItem(this._dbName));
 
 		callback.call(this, todos.filter(function (todo) {
 			for (var q in query) {
@@ -61,7 +65,7 @@
 	 */
 	Store.prototype.findAll = function (callback) {
 		callback = callback || function () {};
-		callback.call(this, JSON.parse(localStorage.getItem(this._dbName)));
+		callback.call(this, JSON.parse(theStorage.getItem(this._dbName)));
 	};
 
 	/**
@@ -73,7 +77,7 @@
 	 * @param {number} id An optional param to enter an ID of an item to update
 	 */
 	Store.prototype.save = function (updateData, callback, id) {
-		var todos = JSON.parse(localStorage.getItem(this._dbName));
+		var todos = JSON.parse(theStorage.getItem(this._dbName));
 
 		callback = callback || function() {};
 
@@ -88,14 +92,14 @@
 				}
 			}
 
-			localStorage.setItem(this._dbName, JSON.stringify(todos));
+			theStorage.setItem(this._dbName, JSON.stringify(todos));
 			callback.call(this, todos);
 		} else {
 			// Generate an ID
 			updateData.id = new Date().getTime();
 
 			todos.push(updateData);
-			localStorage.setItem(this._dbName, JSON.stringify(todos));
+			theStorage.setItem(this._dbName, JSON.stringify(todos));
 			callback.call(this, [updateData]);
 		}
 	};
@@ -107,7 +111,7 @@
 	 * @param {function} callback The callback to fire after saving
 	 */
 	Store.prototype.remove = function (id, callback) {
-		var todos = JSON.parse(localStorage.getItem(this._dbName));
+		var todos = JSON.parse(theStorage.getItem(this._dbName));
 
 		for (var i = 0; i < todos.length; i++) {
 			if (todos[i].id == id) {
@@ -116,7 +120,7 @@
 			}
 		}
 
-		localStorage.setItem(this._dbName, JSON.stringify(todos));
+		theStorage.setItem(this._dbName, JSON.stringify(todos));
 		callback.call(this, todos);
 	};
 
@@ -127,7 +131,7 @@
 	 */
 	Store.prototype.drop = function (callback) {
 		var todos = [];
-		localStorage.setItem(this._dbName, JSON.stringify(todos));
+		theStorage.setItem(this._dbName, JSON.stringify(todos));
 		callback.call(this, todos);
 	};
 
