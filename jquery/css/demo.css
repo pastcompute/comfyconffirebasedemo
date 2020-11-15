@@ -22,3 +22,13 @@ h1.demo {
   font-weight: bold;
   top: -79px;
 }
+
+.hacker {
+  font-size: 24px;
+  font-weight: bold;
+  color: darkred;
+}
+.hacker-button, .hacker-button:active {
+	text-decoration: none;
+	cursor: pointer;
+}
