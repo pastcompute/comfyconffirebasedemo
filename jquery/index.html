@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-framework="jquery">
+	<head>
+		<meta charset="utf-8">
+		<title>jQuery • TodoMVC</title>
+
+		<!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+		<script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+
+		<!-- Add Firebase products that you want to use -->
+		<script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-auth.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
+
+		<script src="js/demo/firebase-init.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.js"></script>
+
+		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+		<link rel="stylesheet" href="css/app.css">
+		<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
+		<link rel="stylesheet" href="css/demo.css">
+	</head>
+	<body>
+		<div id="landing-content" style="display:none;">
+			<h3>Welcome to the ComfyCon Firebase Database Security Demo App</h3>
+			<div id="firebaseui-auth-container"><div id="loader">Please wait...</div></div>
+			<p><button id="btn-sign-up" class="demo-button">Create a new account</button></p>
+		</div>
+
+		<div id="main-content" style="display:none;">
+		<section class="todoapp">
+			<header class="header">
+				<h1 class="demo">Welcome, <span id="user-title">todos user</span></h1>
+				<input class="new-todo" placeholder="What needs to be done?" autofocus>
+			</header>
+			<section class="main">
+				<input id="toggle-all" class="toggle-all" type="checkbox">
+				<label for="toggle-all">Mark all as complete</label>
+				<ul class="todo-list"></ul>
+			</section>
+			<footer class="footer"></footer>
+		</section>
+		<footer class="info">
+			<p>Double-click to edit a todo</p>
+			<p>Created by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
+			<p>Updated for ComfyCon Firebase demonstration by <a href="https://linkedin.com/in/amcdonnell">Andrew McDonnell</a></p>
+			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+			<p class="demo"><button id="btn-sign-out" class="demo-button">Logout</button></p>
+		</footer>
+		</div>
+
+		<script id="todo-template" type="text/x-handlebars-template">
+			{{#this}}
+			<li {{#if completed}}class="completed"{{/if}} data-id="{{id}}">
+				<div class="view">
+					<input class="toggle" type="checkbox" {{#if completed}}checked{{/if}}>
+					<label>{{title}}</label>
+					<button class="destroy"></button>
+				</div>
+				<input class="edit" value="{{title}}">
+			</li>
+		{{/this}}
+		</script>
+		<script id="footer-template" type="text/x-handlebars-template">
+			<span class="todo-count"><strong>{{activeTodoCount}}</strong> {{activeTodoWord}} left</span>
+			<ul class="filters">
+				<li>
+					<a {{#eq filter 'all'}}class="selected"{{/eq}} href="#/all">All</a>
+				</li>
+				<li>
+					<a {{#eq filter 'active'}}class="selected"{{/eq}}href="#/active">Active</a>
+				</li>
+				<li>
+					<a {{#eq filter 'completed'}}class="selected"{{/eq}}href="#/completed">Completed</a>
+				</li>
+			</ul>
+			{{#if completedTodos}}<button class="clear-completed">Clear completed</button>{{/if}}
+		</script>
+		<script src="node_modules/todomvc-common/base.js"></script>
+		<script src="node_modules/jquery/dist/jquery.js"></script>
+		<script src="node_modules/handlebars/dist/handlebars.js"></script>
+		<script src="node_modules/director/build/director.js"></script>
+		<script src="js/app.js"></script>
+		<script src="js/demo/firebaseui-init.js"></script>
+	</body>
+</html>
