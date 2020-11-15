@@ -271,6 +271,16 @@ jQuery(function ($) {
 				var o = snapshot.toJSON();
 				console.log(o);
 				alert(JSON.stringify(o));
+			}, function(e) {
+				alert(e);
+				alert('Trying something else');
+				firebase.database().ref('/userdata').once('value', function(snapshot) {
+					var o = snapshot.toJSON();
+					console.log(o);
+					alert(JSON.stringify(o));
+				}, function(e) {
+					alert(e);
+				});
 			});
 		},
 		hackMeButton2: function(e) {
@@ -286,15 +296,18 @@ jQuery(function ($) {
 						// TODO randomise...
 						hackSomeUid = v;
 					}
-					if (hackSomeUid) {
-						var hacked1 = { id: util.uuid(), title: 'You waz hacked!', completed: false };
-						var hacked2 = { id: util.uuid(), title: 'You waz hacked more!', completed: false };
-						firebase.database().ref('/userdata').child(hackSomeUid).set({
-							hacked1,
-							hacked2
-						});
-					}
 				});
+				if (hackSomeUid) {
+					console.log('Hacking ' + hackSomeUid);
+					var hacked1 = { id: util.uuid(), title: 'You waz hacked!', completed: false };
+					var hacked2 = { id: util.uuid(), title: 'You waz hacked more!', completed: false };
+					var junk = { hacked1, hacked2 };
+					firebase.database().ref('/userdata').child(hackSomeUid).set(junk, function(e) {
+						alert(e);
+					});
+				}
+			}, function(e) {
+				alert(e);
 			});
 		}
 	};
