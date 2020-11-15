@@ -2,12 +2,14 @@
 (function (window) {
   'use strict';
 
+  var onAuthCallback = function() {};
   var ui = new firebaseui.auth.AuthUI(firebase.auth());
   window.demo = window.demo || { };
   window.demo.userDidSignIn = false;
 
-  var credential;
-
+  window.demo.onFirebaseAuth = function(callback) {
+    onAuthCallback = callback;
+  }
 
   var uiConfig = {
     signInOptions: [{
@@ -63,7 +65,9 @@
 
         document.getElementById('user-title').textContent = email;
 
-        credential = user;
+        // hackity hack
+        window.demo.user = user;
+        onAuthCallback(user);
       });
     } else {
       // User is signed out.
@@ -72,15 +76,16 @@
       // document.getElementById('account-details').textContent = 'null';
       document.getElementById('user-title').textContent = '';
 
-
       if (!window.demo.userDidSignIn) {
         console.log('Was not signed in in this browser session yet');
         ui.start('#firebaseui-auth-container', uiConfig);
         document.getElementById('landing-content').style.display = 'block';
+        onAuthCallback(null);
       } else {
         console.log('User sign out completed');
+        onAuthCallback(null, true);
       }
-      credential = null;
+      window.demo.user = null;
     }
   }
 

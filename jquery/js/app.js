@@ -2,6 +2,14 @@
 jQuery(function ($) {
 	'use strict';
 
+	// Firebase conversion notes
+	// this.todos _is_ the data store
+	// so we can treat it as a local cache, for the purpose of this exercise
+	// then, when we alter it, we can then push the data to firebase
+	// when new data comes back from firebase, we can just alter it...
+	// simple, if completely not how this would be implemented in reality
+	// (to start with we'd avoid sending the entire data to firebase....)
+
 	Handlebars.registerHelper('eq', function (a, b, options) {
 		return a === b ? options.fn(this) : options.inverse(this);
 	});
@@ -28,19 +36,19 @@ jQuery(function ($) {
 		pluralize: function (count, word) {
 			return count === 1 ? word : word + 's';
 		},
-		store: function (namespace, data) {
-			if (arguments.length > 1) {
-				return localStorage.setItem(namespace, JSON.stringify(data));
-			} else {
-				var store = localStorage.getItem(namespace);
-				return (store && JSON.parse(store)) || [];
-			}
-		}
+		// store: function (namespace, data) {
+		// 	if (arguments.length > 1) {
+		// 		return localStorage.setItem(namespace, JSON.stringify(data));
+		// 	} else {
+		// 		var store = localStorage.getItem(namespace);
+		// 		return (store && JSON.parse(store)) || [];
+		// 	}
+		// }
 	};
 
 	var App = {
 		init: function () {
-			this.todos = util.store('todos-jquery');
+			this.todos = [];
 			this.todoTemplate = Handlebars.compile($('#todo-template').html());
 			this.footerTemplate = Handlebars.compile($('#footer-template').html());
 			this.bindEvents();
@@ -51,6 +59,60 @@ jQuery(function ($) {
 					this.render();
 				}.bind(this)
 			}).init('/all');
+
+			window.demo.onFirebaseAuth(this.onFirebaseAuth.bind(this));
+		},
+		onFirebaseAuth: function(user, wasLogout) {
+			// Quick & dirty firebase implementation: wait for things to self update and sync up
+			console.log('onFirebaseAuth', user && user.uid, wasLogout);
+			if (user && user.uid) {
+				firebase.database().ref('/userdata').child(user.uid).on('value', this.firebaseOnValue.bind(this));
+			}
+			if (wasLogout) {
+				$('main-content').css({'display': 'none'});
+			}
+		},
+		firebaseOnValue: function(snapshot) {
+			var items = snapshot.toJSON();
+			console.log('firebaseOnValue', items);
+
+			var newTodos = [];
+			if (items) {
+				var keys = Object.getOwnPropertyNames(items);
+				// Exchange the original UUID for the firebase key now
+				keys.forEach(function(v) { items[v].id = v; newTodos.push(items[v]); });
+			}
+			this.todos = newTodos;
+			$('#working-status').css({"display":"none"});
+			this.render();
+		},
+		firebasePush: function(o) {
+			var db = firebase.database();
+			if (window.demo && window.demo.user && window.demo.user.uid) {
+				var pref = db.ref('/userdata').child(window.demo.user.uid).push(o);
+				$('#working-status').text('working... ' + pref.key).css({"display":"block"});
+				console.log('Add key=' + pref.key);
+			} else {
+				alert('Not logged in!');
+			}
+		},
+		firebaseModify: function(o) {
+			var db = firebase.database();
+			var ref = db.ref('/userdata').child(window.demo.user.uid).child(o.id);
+			$('#working-status').text('working... ' + o.key).css({"display":"block"});
+			console.log('Update key=' + o.key);
+			ref.set(o);
+		},
+		firebaseDelete: function(o) {
+			var db = firebase.database();
+			if (window.demo && window.demo.user && window.demo.user.uid) {
+				var ref = db.ref('/userdata').child(window.demo.user.uid).child(o.id);
+				console.log('Remove key=' + o.id);
+				$('#working-status').text('working... ' + o.id).css({"display":"block"});
+				ref.remove();
+			} else {
+				alert('Not logged in!');
+			}
 		},
 		bindEvents: function () {
 			$('.new-todo').on('keyup', this.create.bind(this));
@@ -64,13 +126,14 @@ jQuery(function ($) {
 				.on('click', '.destroy', this.destroy.bind(this));
 		},
 		render: function () {
+			console.log('render');
 			var todos = this.getFilteredTodos();
 			$('.todo-list').html(this.todoTemplate(todos));
 			$('.main').toggle(todos.length > 0);
 			$('.toggle-all').prop('checked', this.getActiveTodos().length === 0);
 			this.renderFooter();
 			$('.new-todo').focus();
-			util.store('todos-jquery', this.todos);
+			// util.store('todos-jquery', this.todos);
 		},
 		renderFooter: function () {
 			var todoCount = this.todos.length;
@@ -89,6 +152,7 @@ jQuery(function ($) {
 
 			this.todos.forEach(function (todo) {
 				todo.completed = isChecked;
+				this.firebaseModify(todo);
 			});
 
 			this.render();
@@ -139,19 +203,21 @@ jQuery(function ($) {
 				return;
 			}
 
-			this.todos.push({
-				id: util.uuid(),
+			// Quick & dirty firebase implementation: append the new item into Firebase, and wait for things to self update
+			var o = {
+				id: util.uuid(), // this becomes a placeholder until we know the real id
 				title: val,
 				completed: false
-			});
-
+			};
+			this.todos.push(o); // temporary until firebase catches up
+			this.firebasePush(o);
 			$input.val('');
-
 			this.render();
 		},
 		toggle: function (e) {
 			var i = this.getIndexFromEl(e.target);
 			this.todos[i].completed = !this.todos[i].completed;
+			this.firebaseModify(this.todos[i]);
 			this.render();
 		},
 		editingMode: function (e) {
@@ -175,7 +241,7 @@ jQuery(function ($) {
 			var el = e.target;
 			var $el = $(el);
 			var val = $el.val().trim();
-			
+
 			if ($el.data('abort')) {
 				$el.data('abort', false);
 			} else if (!val) {
@@ -188,7 +254,10 @@ jQuery(function ($) {
 			this.render();
 		},
 		destroy: function (e) {
-			this.todos.splice(this.getIndexFromEl(e.target), 1);
+			var x = this.getIndexFromEl(e.target);
+			var o = this.todos[x];
+			this.todos.splice(x, 1); // temporary until firebase catches up
+			this.firebaseDelete(o);
 			this.render();
 		}
 	};
